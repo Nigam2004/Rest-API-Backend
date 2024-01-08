@@ -1,5 +1,7 @@
 const user = require("../Models/User");
 const joi = require("joi");
+const bcrypt = require("bcrypt");
+
 exports.userRegister = async (req, res, next) => {
   const registerSchema = joi.object({
     email: joi.string().email().required(),
@@ -17,6 +19,15 @@ exports.userRegister = async (req, res, next) => {
   if (result) {
     return next("User already exist");
   }
-  const register = await user.insertMany({ email, password, confirmPassword });
-  res.send({ success: true, data: register });
+
+  // hashes
+  const hashedPassword = await bcrypt.hash(password, 10);
+  const C_hashedPassword = await bcrypt.hash(confirmPassword, 10);
+  newUser = new user({
+    email,
+    password: hashedPassword,
+    confirmPassword: C_hashedPassword,
+  });
+  let newResult = await newUser.save();
+  res.send({ success: true, data: newResult });
 };
