@@ -2,13 +2,18 @@ const { ValidationError } = require("joi");
 const errorHandler = (err, req, res, next) => {
   let statusCode = 500;
   let data = {
-    errorMessage: "Internal Server Error",
-    originalError: err,
+    error: err,
   };
+  if (err instanceof ReferenceError) {
+    data = {
+      error: "internal error",
+    };
+  }
+
   if (err instanceof ValidationError) {
     statusCode = 422;
     data = {
-      errorMessage: err.message,
+      error: err.message,
     };
   }
   return res.send(data);

@@ -1,6 +1,7 @@
 const user = require("../Models/User");
 const joi = require("joi");
 const bcrypt = require("bcrypt");
+const jwtServices = require("../services/JwtServices");
 
 exports.userRegister = async (req, res, next) => {
   const registerSchema = joi.object({
@@ -30,4 +31,37 @@ exports.userRegister = async (req, res, next) => {
   });
   let newResult = await newUser.save();
   res.send({ success: true, data: newResult });
+};
+
+exports.userLogin = async (req, res, next) => {
+  const loginSchema = joi.object({
+    email: joi.string().email().required(),
+    password: joi.string().pattern(new RegExp("(?=.*[a-z])")).required(),
+  });
+
+  const { error } = loginSchema.validate(req.body);
+  if (error) {
+    return next(error);
+  }
+  const { email, password } = req.body;
+  // console.log(password);
+  let token;
+  try {
+    const User = await user.findOne({ email });
+    if (!User) {
+      return next("User Does not exist");
+    }
+    const match = await bcrypt.compare(password, User.password);
+    // console.log(match);
+    if (!match) {
+      return next("Password Does not match");
+    }
+
+    token = jwtServices.sign({ _id: User._id, email: User.email });
+    // console.log(token);
+    res.send({ result: "success", token: `Bearer ${token}` });
+  } catch (err) {
+    console.log(err);
+    return next(err);
+  }
 };
