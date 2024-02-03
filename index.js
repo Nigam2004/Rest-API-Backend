@@ -9,7 +9,8 @@ app.use(express.json());
 const cloudinaryUploder = require("./services/cloudinary");
 const upload = require("./Middlewares/multer");
 const files = require("./Models/File");
-
+const emailService = require("./services/mailService");
+emailService();
 app.use("/api/user", user);
 app.post("/upload-file", upload, async (req, res) => {
   const cfile = await cloudinaryUploder(req.file.path);
